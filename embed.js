@@ -9,7 +9,7 @@
     
     // Configuration
     var CONFIG = {
-        WIDGET_URL: 'https://irdecode.com/widget',
+        WIDGET_URL: 'https://irdecode.com/widgets',
         DEFAULT_HEIGHT: 950,
         RESIZE_ENABLED: true,
         DEBUG: false,
