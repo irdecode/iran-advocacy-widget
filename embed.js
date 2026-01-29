@@ -1,105 +1,144 @@
 /**
- * Iran Advocacy Widget - Embed Script
- * Version: 1.0.0
- * Repository: https://github.com/irdecode/iran-advocacy-widget
- * License: MIT
+ * IRdecode Advocacy Widget Embed Script
+ * Version: 2.0.1 - Fixed syntax errors
  */
 
 (function() {
     'use strict';
     
-    // Configuration
-    const VERSION = '1.0.0';
-    const WIDGET_CONFIG = {
-        widgetUrl: 'https://irdecode.com/widgets',
-        containerId: 'iran-advocacy-widget',
-        defaultWidth: '100%',
-        defaultHeight: '800px',
-        borderRadius: '12px',
-        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-        allowedOrigins: ['https://irdecode.com'],
-        debug: false,
+    const CONFIG = {
+        WIDGET_URL: 'https://irdecode.com/widget',
+        DEFAULT_HEIGHT: 950,
+        DEBUG: true // Enable debug for troubleshooting
     };
     
-    // Logging utility
-    function log(message, type = 'info') {
-        if (!WIDGET_CONFIG.debug) return;
-        const prefix = '[Iran Widget]';
-        console[type](prefix, message);
-    }
-    
-    // Error handler
-    function handleError(message, error) {
-        log(message, 'error');
-        console.error('[Iran Widget Error]', error);
-        
-        // Show user-friendly error
-        const container = document.getElementById(WIDGET_CONFIG.containerId);
-        if (container) {
-            container.innerHTML = `
-                <div style="
-                    padding: 24px;
-                    background: #fee;
-                    border: 2px solid #fcc;
-                    border-radius: 8px;
-                    color: #c33;
-                    font-family: -apple-system, sans-serif;
-                    text-align: center;
-                ">
-                    <strong>Widget Error</strong>
-                    <p style="margin: 8px 0 0; font-size: 14px;">
-                        Unable to load advocacy widget. Please refresh the page.
-                    </p>
-                </div>
-            `;
+    const log = function() {
+        if (CONFIG.DEBUG) {
+            console.log.apply(console, ['[IRdecode Widget]'].concat(Array.prototype.slice.call(arguments)));
         }
-    }
+    };
     
-    // Validate origin for security
-    function isOriginAllowed(origin) {
-        return WIDGET_CONFIG.allowedOrigins.some(allowed => {
-            return origin === allowed || origin.startsWith(allowed);
-        });
-    }
+    const error = function() {
+        console.error.apply(console, ['[IRdecode Widget]'].concat(Array.prototype.slice.call(arguments)));
+    };
     
-    // Initialize widget
     function initWidget() {
-        log('Initializing widget v' + VERSION);
+        log('Initializing widgets...');
         
-        // Check for container
-        const container = document.getElementById(WIDGET_CONFIG.containerId);
-        if (!container) {
-            handleError('Container element not found', new Error('Missing #' + WIDGET_CONFIG.containerId));
+        const containers = document.querySelectorAll('[data-irdecode-widget]');
+        
+        if (containers.length === 0) {
+            log('No widget containers found');
             return;
         }
         
-        // Get configuration from data attributes
-        const customUrl = container.dataset.widgetUrl || WIDGET_CONFIG.widgetUrl;
-        const width = container.dataset.width || WIDGET_CONFIG.defaultWidth;
-        const height = container.dataset.height || WIDGET_CONFIG.defaultHeight;
-        const campaign = container.dataset.campaign || '';
-        const recipient = container.dataset.recipient || '';
+        log('Found ' + containers.length + ' widget container(s)');
         
-        // Build widget URL with parameters
-        const params = new URLSearchParams();
-        if (campaign) params.append('campaign', campaign);
-        if (recipient) params.append('recipient', recipient);
+        containers.forEach(function(container, index) {
+            try {
+                createWidget(container, index);
+            } catch (err) {
+                error('Failed to create widget:', err);
+            }
+        });
+    }
+    
+    function createWidget(container, index) {
+        const apiKey = container.getAttribute('data-api-key');
         
-        const widgetUrl = customUrl + (params.toString() ? '?' + params.toString() : '');
+        if (!apiKey) {
+            error('Missing data-api-key attribute');
+            container.innerHTML = '<div style="padding:40px;text-align:center;border:2px dashed #e5e5e5;border-radius:12px;background:#fafafa;"><div style="font-size:48px;margin-bottom:16px;">🔒</div><h3 style="margin:0 0 8px;color:#171717;">API Key Required</h3><p style="margin:0;color:#737373;font-size:14px;">Add <code>data-api-key="your_key"</code> to the widget container.</p></div>';
+            return;
+        }
         
-        log('Widget URL: ' + widgetUrl);
+        const campaign = container.getAttribute('data-campaign') || 'iran-irgc-terrorist-2026';
+        const height = container.getAttribute('data-height') || CONFIG.DEFAULT_HEIGHT;
         
-        // Create iframe
+        const widgetUrl = new URL(CONFIG.WIDGET_URL);
+        widgetUrl.searchParams.set('apiKey', apiKey);
+        widgetUrl.searchParams.set('campaign', campaign);
+        widgetUrl.searchParams.set('embedded', 'true');
+        widgetUrl.searchParams.set('parent', window.location.hostname);
+        
+        log('Creating widget:', {
+            apiKey: apiKey.substring(0, 10) + '...',
+            campaign: campaign,
+            height: height,
+            url: widgetUrl.toString()
+        });
+        
         const iframe = document.createElement('iframe');
-        iframe.src = widgetUrl;
-        iframe.style.cssText = `
-            width: ${width};
-            height: ${height};
-            border: none;
-            border-radius: ${WIDGET_CONFIG.borderRadius};
-            box-shadow: ${WIDGET_CONFIG.boxShadow};
-            display: block;
-            max-width: 100%;
-        `;
+        iframe.id = 'irdecode-widget-' + index;
+        iframe.src = widgetUrl.toString();
+        iframe.style.cssText = 'width: 100%; height: ' + height + 'px; border: none; border-radius: 12px; display: block; background: transparent;';
         iframe.setAttribute('scrolling', 'no');
-        iframe.setAttribute('allow', 'clipb
+        iframe.setAttribute('allow', 'clipboard-write');
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals');
+        iframe.setAttribute('title', 'IRdecode Advocacy Widget');
+        iframe.setAttribute('loading', 'lazy');
+        
+        container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: ' + height + 'px; background: #fafafa; border-radius: 12px; border: 1px solid #e5e5e5;"><div style="text-align: center;"><div style="width: 40px; height: 40px; margin: 0 auto 16px; border: 4px solid #e5e5e5; border-top-color: #171717; border-radius: 50%; animation: spin 0.8s linear infinite;"></div><p style="margin: 0; color: #737373; font-size: 14px;">Loading widget...</p></div></div><style>@keyframes spin { to { transform: rotate(360deg); } }</style>';
+        
+        iframe.onload = function() {
+            log('Widget loaded successfully');
+            const loader = container.querySelector('[style*="Loading widget"]');
+            if (loader && loader.parentElement) {
+                loader.parentElement.remove();
+            }
+        };
+        
+        iframe.onerror = function() {
+            error('Widget failed to load');
+            container.innerHTML = '<div style="padding:40px;text-align:center;border:2px solid #fca5a5;border-radius:12px;background:#fef2f2;"><div style="font-size:48px;margin-bottom:16px;">⚠️</div><h3 style="margin:0 0 8px;color:#dc2626;">Failed to Load Widget</h3><p style="margin:0;color:#7f1d1d;font-size:14px;">Please check your API key or contact support@irdecode.com</p></div>';
+        };
+        
+        container.appendChild(iframe);
+        
+        setupResize(iframe);
+    }
+    
+    function setupResize(iframe) {
+        window.addEventListener('message', function(event) {
+            try {
+                const widgetOrigin = new URL(CONFIG.WIDGET_URL).origin;
+                if (event.origin !== widgetOrigin) {
+                    return;
+                }
+                
+                if (event.data.type === 'resize' && event.data.height) {
+                    log('Resizing iframe to', event.data.height, 'px');
+                    iframe.style.height = event.data.height + 'px';
+                }
+            } catch (e) {
+                // Ignore invalid messages
+            }
+        });
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initWidget);
+    } else {
+        initWidget();
+    }
+    
+    if (window.MutationObserver) {
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1 && node.hasAttribute && node.hasAttribute('data-irdecode-widget')) {
+                        log('New widget detected, initializing...');
+                        createWidget(node, Date.now());
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+    
+    log('Embed script loaded');
+})();
