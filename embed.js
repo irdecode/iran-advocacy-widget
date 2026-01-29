@@ -11,7 +11,7 @@
     // Configuration
     const VERSION = '1.0.0';
     const WIDGET_CONFIG = {
-        widgetUrl: 'https://irdecode.com/widget',
+        widgetUrl: 'https://irdecode.com/widgets',
         containerId: 'iran-advocacy-widget',
         defaultWidth: '100%',
         defaultHeight: '800px',
