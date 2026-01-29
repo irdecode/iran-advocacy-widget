@@ -11,13 +11,13 @@
     // Configuration
     const VERSION = '1.0.0';
     const WIDGET_CONFIG = {
-        widgetUrl: 'https://your-site.framer.app/widget',
+        widgetUrl: 'https://irdecode.com/widget',
         containerId: 'iran-advocacy-widget',
         defaultWidth: '100%',
         defaultHeight: '800px',
         borderRadius: '12px',
         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-        allowedOrigins: ['https://your-site.framer.app'],
+        allowedOrigins: ['https://irdecode.com'],
         debug: false,
     };
     
